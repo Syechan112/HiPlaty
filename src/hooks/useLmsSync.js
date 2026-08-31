@@ -1,7 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { API_URL, CACHE_KEY, SYNC_TIME_KEY } from '../config/api';
-
-const API_URL_KEY = 'lms_api_url';
 
 export function useLmsSync() {
   const getApiUrl = () => API_URL;
@@ -25,10 +23,10 @@ export function useLmsSync() {
       return null;
     }
   });
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
 
   const fetchData = useCallback(async () => {
-    if (!navigator.onLine) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
       setIsOnline(false);
       setLoading(false);
       return;
@@ -48,7 +46,6 @@ export function useLmsSync() {
       
       const jsonData = await response.json();
 
-      
       if (Array.isArray(jsonData)) {
         localStorage.setItem(CACHE_KEY, JSON.stringify(jsonData));
         const now = new Date().toISOString();
@@ -67,8 +64,37 @@ export function useLmsSync() {
     }
   }, []);
 
+  // Automatic fetch on mount & periodic polling for multi-device sync
+  useEffect(() => {
+    fetchData();
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 15000);
+
+    const handleSyncEvent = () => {
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          setData(JSON.parse(cached));
+        }
+      } catch {}
+    };
+
+    window.addEventListener('storage', handleSyncEvent);
+    window.addEventListener('lms_courses_updated', handleSyncEvent);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleSyncEvent);
+      window.removeEventListener('lms_courses_updated', handleSyncEvent);
+    };
+  }, [fetchData]);
+
   const manualSync = useCallback(async () => {
-    return await fetchData();
+    const res = await fetchData();
+    window.dispatchEvent(new CustomEvent('lms_courses_updated'));
+    return res;
   }, [fetchData]);
 
   const clearCache = useCallback(() => {
