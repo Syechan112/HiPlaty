@@ -121,10 +121,39 @@ export function useForum() {
         if (Array.isArray(remoteData)) {
           const now = Date.now();
           const valid = remoteData.filter(t => now - (Number(t.createdAt) || 0) < FORUM_TTL_MS);
-          setRawThreads(valid);
-          try {
-            localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(valid));
-          } catch {}
+          const uidStr = String(activeUserId);
+
+          setRawThreads(prev => {
+            const prevMap = new Map();
+            prev.forEach(t => prevMap.set(t.threadId, t));
+
+            const merged = valid.map(remoteT => {
+              const localT = prevMap.get(remoteT.threadId);
+              if (!localT) return remoteT;
+
+              const localLikes = Array.isArray(localT.likes) ? localT.likes.map(String) : [];
+              const remoteLikes = Array.isArray(remoteT.likes) ? remoteT.likes.map(String) : [];
+              const localHasUser = localLikes.includes(uidStr);
+              const remoteHasUser = remoteLikes.includes(uidStr);
+
+              let finalLikes = remoteLikes;
+              if (localHasUser && !remoteHasUser) {
+                finalLikes = [...remoteLikes, uidStr];
+              } else if (!localHasUser && remoteHasUser) {
+                finalLikes = remoteLikes.filter(id => id !== uidStr);
+              }
+
+              return {
+                ...remoteT,
+                likes: finalLikes
+              };
+            });
+
+            try {
+              localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
         }
       }
     } catch (err) {
@@ -132,7 +161,7 @@ export function useForum() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [activeUserId]);
 
   useEffect(() => {
     pruneExpiredThreads();
@@ -201,23 +230,21 @@ export function useForum() {
     window.dispatchEvent(new CustomEvent('lms_forum_updated'));
     setShowCreateModal(false);
 
-    try {
-      await fetch(`${API_URL}?action=create_forum_thread`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(newThread)
-      });
-    } catch (err) {
-      console.warn('Backend create thread fallback:', err);
-    }
+    // Fire and forget in background
+    fetch(`${API_URL}?action=create_forum_thread`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(newThread)
+    }).catch(err => console.warn('Backend create thread fallback:', err));
 
     return true;
   }, [activeUserId, activeUserName, activeUserRole]);
 
-  const toggleLike = useCallback(async (threadId) => {
+  const toggleLike = useCallback((threadId) => {
     if (!threadId) return;
     const uidStr = String(activeUserId);
 
+    // 1. Instant optimistic update (0ms UI lag)
     setRawThreads(prev => {
       const next = prev.map(t => {
         if (t.threadId !== threadId) return t;
@@ -236,18 +263,15 @@ export function useForum() {
 
     window.dispatchEvent(new CustomEvent('lms_forum_updated'));
 
-    try {
-      await fetch(`${API_URL}?action=toggle_forum_like`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ threadId, userId: uidStr })
-      });
-    } catch (err) {
-      console.warn('Backend toggle like fallback:', err);
-    }
+    // 2. Silent background sync (fire-and-forget, non-blocking)
+    fetch(`${API_URL}?action=toggle_forum_like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ threadId, userId: uidStr })
+    }).catch(err => console.warn('Backend toggle like fallback:', err));
   }, [activeUserId]);
 
-  const addReply = useCallback(async (threadId, text) => {
+  const addReply = useCallback((threadId, text) => {
     if (!text.trim()) return false;
 
     const newReply = {
@@ -274,20 +298,16 @@ export function useForum() {
 
     window.dispatchEvent(new CustomEvent('lms_forum_updated'));
 
-    try {
-      await fetch(`${API_URL}?action=add_forum_reply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(newReply)
-      });
-    } catch (err) {
-      console.warn('Backend add reply fallback:', err);
-    }
+    fetch(`${API_URL}?action=add_forum_reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(newReply)
+    }).catch(err => console.warn('Backend add reply fallback:', err));
 
     return true;
   }, [activeUserId, activeUserName, activeUserRole]);
 
-  const deleteThread = useCallback(async (threadId) => {
+  const deleteThread = useCallback((threadId) => {
     setRawThreads(prev => {
       const next = prev.filter(t => t.threadId !== threadId);
       try {
@@ -300,15 +320,11 @@ export function useForum() {
     }
     window.dispatchEvent(new CustomEvent('lms_forum_updated'));
 
-    try {
-      await fetch(`${API_URL}?action=delete_forum_thread`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ threadId, userId: activeUserId })
-      });
-    } catch (err) {
-      console.warn('Backend delete thread fallback:', err);
-    }
+    fetch(`${API_URL}?action=delete_forum_thread`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ threadId, userId: activeUserId })
+    }).catch(err => console.warn('Backend delete thread fallback:', err));
   }, [activeDetailThreadId, activeUserId]);
 
   const threadsCountByTag = useMemo(() => {
