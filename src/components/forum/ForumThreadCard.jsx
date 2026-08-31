@@ -22,7 +22,10 @@ export function ForumThreadCard({
   const repliesCount = thread.replies?.length || 0;
   const tagInfo = getTagInfo(thread.tag);
 
-  const canDelete = String(thread.authorId) === String(currentUserId) || userRole === 'admin';
+  const isAuthor = Boolean(
+    thread.authorId && currentUserId && String(thread.authorId).trim().toLowerCase() === String(currentUserId).trim().toLowerCase()
+  );
+  const canDelete = isAuthor || userRole === 'admin' || userRole === 'educator';
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs hover:border-slate-300 transition-all space-y-4">

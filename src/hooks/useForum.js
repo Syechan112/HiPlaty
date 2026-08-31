@@ -78,11 +78,12 @@ export function useForum() {
     try {
       if (typeof window !== 'undefined') {
         const stored = localStorage.getItem(FORUM_STORAGE_KEY);
-        if (stored) {
+        if (stored !== null) {
           const parsed = JSON.parse(stored);
-          const now = Date.now();
-          const valid = parsed.filter(t => now - (Number(t.createdAt) || 0) < FORUM_TTL_MS);
-          if (valid.length > 0) return valid;
+          if (Array.isArray(parsed)) {
+            const now = Date.now();
+            return parsed.filter(t => now - (Number(t.createdAt) || 0) < FORUM_TTL_MS);
+          }
         }
       }
     } catch (e) {
@@ -111,43 +112,19 @@ export function useForum() {
     });
   }, []);
 
-
   const fetchRemoteThreads = useCallback(async (silent = true) => {
     if (!silent) setLoading(true);
     try {
       const response = await fetch(`${API_URL}?action=get_forum_threads&_t=${Date.now()}`);
       if (response.ok) {
         const remoteData = await response.json();
-        if (Array.isArray(remoteData) && remoteData.length > 0) {
+        if (Array.isArray(remoteData)) {
           const now = Date.now();
           const valid = remoteData.filter(t => now - (Number(t.createdAt) || 0) < FORUM_TTL_MS);
-          if (valid.length > 0) {
-            setRawThreads(prev => {
-              const map = new Map();
-              prev.forEach(t => map.set(t.threadId, t));
-              valid.forEach(remoteT => {
-                const localT = map.get(remoteT.threadId);
-                if (localT) {
-                  const repMap = new Map();
-                  (localT.replies || []).forEach(r => repMap.set(r.replyId, r));
-                  (remoteT.replies || []).forEach(r => repMap.set(r.replyId, r));
-                  map.set(remoteT.threadId, {
-                    ...localT,
-                    ...remoteT,
-                    likes: localT.likes || remoteT.likes || [],
-                    replies: Array.from(repMap.values())
-                  });
-                } else {
-                  map.set(remoteT.threadId, remoteT);
-                }
-              });
-              const merged = Array.from(map.values()).filter(t => now - (Number(t.createdAt) || 0) < FORUM_TTL_MS);
-              try {
-                localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(merged));
-              } catch {}
-              return merged;
-            });
-          }
+          setRawThreads(valid);
+          try {
+            localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(valid));
+          } catch {}
         }
       }
     } catch (err) {

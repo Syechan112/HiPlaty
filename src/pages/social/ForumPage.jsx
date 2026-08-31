@@ -122,8 +122,10 @@ export function ForumPage() {
         isOpen={Boolean(activeDetailThread)}
         onClose={() => setActiveDetailThreadId(null)}
         currentUserId={activeUserId}
+        userRole={activeUserRole}
         onLike={toggleLike}
         onAddReply={addReply}
+        onDelete={(id) => setThreadToDeleteId(id)}
       />
 
       {/* Modal Konfirmasi Hapus Diskusi */}

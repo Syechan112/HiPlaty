@@ -6,7 +6,8 @@ import {
   Code, 
   Heart,
   Shield,
-  GraduationCap
+  GraduationCap,
+  Trash2
 } from 'lucide-react';
 import { getTagInfo, formatRemainingTime, formatPostTime } from '../../constants/forumConstants';
 
@@ -15,8 +16,10 @@ export function ForumThreadDetailModal({
   isOpen,
   onClose,
   currentUserId,
+  userRole,
   onLike,
-  onAddReply
+  onAddReply,
+  onDelete
 }) {
   const [replyText, setReplyText] = useState('');
   const replyInputRef = useRef(null);
@@ -55,6 +58,11 @@ export function ForumThreadDetailModal({
     }
   };
 
+  const isAuthor = Boolean(
+    thread.authorId && currentUserId && String(thread.authorId).trim().toLowerCase() === String(currentUserId).trim().toLowerCase()
+  );
+  const canDelete = isAuthor || userRole === 'admin' || userRole === 'educator';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
       <div className="bg-white rounded-3xl border border-slate-200 w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -70,13 +78,28 @@ export function ForumThreadDetailModal({
               <span>{formatRemainingTime(thread.createdAt)}</span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {canDelete && onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onDelete(thread.threadId);
+                }}
+                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                title="Hapus Diskusi"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Thread Content + Replies */}
@@ -129,7 +152,7 @@ export function ForumThreadDetailModal({
               )}
             </div>
 
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex items-center justify-between gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => onLike(thread.threadId)}
@@ -142,6 +165,20 @@ export function ForumThreadDetailModal({
                 <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-rose-600' : ''}`} />
                 <span>{likesCount} Suka</span>
               </button>
+
+              {canDelete && onDelete && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onDelete(thread.threadId);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer text-xs font-bold"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Hapus Diskusi</span>
+                </button>
+              )}
             </div>
           </div>
 
