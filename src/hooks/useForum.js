@@ -111,17 +111,6 @@ export function useForum() {
     });
   }, []);
 
-  const syncToAppsScript = useCallback((threadsSnapshot) => {
-    const valid = (threadsSnapshot || rawThreads).filter(t => Date.now() - (Number(t.createdAt) || 0) < FORUM_TTL_MS);
-    fetch(`${API_URL}?action=sync_forum_threads`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        userId: activeUserId,
-        threads: valid
-      })
-    }).catch(err => console.warn('Apps Script forum sync fallback:', err));
-  }, [activeUserId, rawThreads]);
 
   const fetchRemoteThreads = useCallback(async (silent = true) => {
     if (!silent) setLoading(true);
@@ -207,7 +196,7 @@ export function useForum() {
     };
   }, []);
 
-  const createThread = useCallback(({ title, content, tag, codeSnippet = '' }) => {
+  const createThread = useCallback(async ({ title, content, tag, codeSnippet = '' }) => {
     if (!title.trim() || !content.trim()) return false;
     
     const newThread = {
@@ -229,16 +218,26 @@ export function useForum() {
       try {
         localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(next));
       } catch {}
-      syncToAppsScript(next);
       return next;
     });
 
     window.dispatchEvent(new CustomEvent('lms_forum_updated'));
     setShowCreateModal(false);
-    return true;
-  }, [activeUserId, activeUserName, activeUserRole, syncToAppsScript]);
 
-  const toggleLike = useCallback((threadId) => {
+    try {
+      await fetch(`${API_URL}?action=create_forum_thread`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(newThread)
+      });
+    } catch (err) {
+      console.warn('Backend create thread fallback:', err);
+    }
+
+    return true;
+  }, [activeUserId, activeUserName, activeUserRole]);
+
+  const toggleLike = useCallback(async (threadId) => {
     if (!threadId) return;
     const uidStr = String(activeUserId);
 
@@ -255,18 +254,28 @@ export function useForum() {
       try {
         localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(next));
       } catch {}
-      syncToAppsScript(next);
       return next;
     });
 
     window.dispatchEvent(new CustomEvent('lms_forum_updated'));
-  }, [activeUserId, syncToAppsScript]);
 
-  const addReply = useCallback((threadId, text) => {
+    try {
+      await fetch(`${API_URL}?action=toggle_forum_like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ threadId, userId: uidStr })
+      });
+    } catch (err) {
+      console.warn('Backend toggle like fallback:', err);
+    }
+  }, [activeUserId]);
+
+  const addReply = useCallback(async (threadId, text) => {
     if (!text.trim()) return false;
 
     const newReply = {
       replyId: `rep-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      threadId,
       authorId: activeUserId,
       authorName: activeUserName,
       authorRole: activeUserRole,
@@ -283,28 +292,47 @@ export function useForum() {
       try {
         localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(next));
       } catch {}
-      syncToAppsScript(next);
       return next;
     });
 
     window.dispatchEvent(new CustomEvent('lms_forum_updated'));
-    return true;
-  }, [activeUserId, activeUserName, activeUserRole, syncToAppsScript]);
 
-  const deleteThread = useCallback((threadId) => {
+    try {
+      await fetch(`${API_URL}?action=add_forum_reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(newReply)
+      });
+    } catch (err) {
+      console.warn('Backend add reply fallback:', err);
+    }
+
+    return true;
+  }, [activeUserId, activeUserName, activeUserRole]);
+
+  const deleteThread = useCallback(async (threadId) => {
     setRawThreads(prev => {
       const next = prev.filter(t => t.threadId !== threadId);
       try {
         localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(next));
       } catch {}
-      syncToAppsScript(next);
       return next;
     });
     if (activeDetailThreadId === threadId) {
       setActiveDetailThreadId(null);
     }
     window.dispatchEvent(new CustomEvent('lms_forum_updated'));
-  }, [activeDetailThreadId, syncToAppsScript]);
+
+    try {
+      await fetch(`${API_URL}?action=delete_forum_thread`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ threadId, userId: activeUserId })
+      });
+    } catch (err) {
+      console.warn('Backend delete thread fallback:', err);
+    }
+  }, [activeDetailThreadId, activeUserId]);
 
   const threadsCountByTag = useMemo(() => {
     const counts = { all: rawThreads.length };
