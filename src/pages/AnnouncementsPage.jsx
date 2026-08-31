@@ -81,7 +81,8 @@ export function AnnouncementsPage() {
                   { key: 'all', label: 'Semua' },
                   { key: 'update', label: 'Pembaruan Fitur' },
                   { key: 'system', label: 'Sistem' },
-                  { key: 'guide', label: 'Panduan' }
+                  { key: 'guide', label: 'Panduan' },
+                  { key: 'notice', label: 'Pengumuman' }
                 ].map(tab => (
                   <button
                     key={tab.key}

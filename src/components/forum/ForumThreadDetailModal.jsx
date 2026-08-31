@@ -43,7 +43,11 @@ export function ForumThreadDetailModal({
 
   if (!isOpen || !thread) return null;
 
-  const isLiked = Array.isArray(thread.likes) && thread.likes.some(id => String(id) === String(currentUserId));
+  const isLiked = Boolean(
+    currentUserId && 
+    Array.isArray(thread.likes) && 
+    thread.likes.some(id => String(id).trim() !== '' && String(id).trim().toLowerCase() === String(currentUserId).trim().toLowerCase())
+  );
   const likesCount = thread.likes?.length || 0;
   const replies = Array.isArray(thread.replies) ? thread.replies : [];
   const tagInfo = getTagInfo(thread.tag);

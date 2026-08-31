@@ -35,15 +35,17 @@ export function useAnnouncements() {
   const userId = auth?.userId || 'GUEST_USER';
   const userRole = auth?.role || 'student';
 
-  const apiUrl = localStorage.getItem('lms_api_url') || API_URL;
+  const apiUrl = API_URL;
 
   const [announcements, setAnnouncements] = useState(() => {
     try {
       const stored = localStorage.getItem(ANNOUNCEMENTS_KEY);
-      return stored ? JSON.parse(stored) : DEFAULT_ANNOUNCEMENTS;
-    } catch {
-      return DEFAULT_ANNOUNCEMENTS;
-    }
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_ANNOUNCEMENTS;
   });
 
   const [loading, setLoading] = useState(false);
@@ -62,10 +64,10 @@ export function useAnnouncements() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${apiUrl}?action=get_announcements`);
+      const response = await fetch(`${apiUrl}?action=get_announcements&_t=${Date.now()}`);
       if (response.ok) {
         const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setAnnouncements(data);
           try {
             localStorage.setItem(ANNOUNCEMENTS_KEY, JSON.stringify(data));
@@ -83,6 +85,10 @@ export function useAnnouncements() {
 
   useEffect(() => {
     fetchRemoteAnnouncements();
+    const interval = setInterval(() => {
+      fetchRemoteAnnouncements();
+    }, 10000);
+    return () => clearInterval(interval);
   }, [fetchRemoteAnnouncements]);
 
   useEffect(() => {
@@ -226,7 +232,17 @@ export function useAnnouncements() {
 
   const visibleAnnouncements = announcements.filter(a => {
     if (userRole === 'admin') return true;
-    return a.targetRole === 'all' || a.targetRole === userRole;
+    const target = String(a.targetRole || 'all').toLowerCase().trim();
+    const role = String(userRole || 'student').toLowerCase().trim();
+    return (
+      target === 'all' || 
+      target === role || 
+      target === 'semua' || 
+      target === 'semua pengguna' || 
+      (target.includes('siswa') && role === 'student') ||
+      (target.includes('guru') && role === 'educator') ||
+      (target.includes('educator') && role === 'educator')
+    );
   });
 
   const unreadCount = visibleAnnouncements.filter(a => !readIds.includes(a.id)).length;
@@ -239,6 +255,7 @@ export function useAnnouncements() {
     unreadCount,
     readIds,
     fetchRemoteAnnouncements,
+    fetchAnnouncements: fetchRemoteAnnouncements,
     createAnnouncement,
     updateAnnouncement,
     deleteAnnouncement,

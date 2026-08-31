@@ -1,4 +1,4 @@
-export const API_URL = 'https://script.google.com/macros/s/AKfycbwiX6oErRHWvy3ABQc213LmoOVBqinPABq9XUnFrFE_Z_h82SsULeRfO6OEmCCvJ6Mzrg/exec';
+export const API_URL = 'https://script.google.com/macros/s/AKfycbzxaZAI5Zb6kWvySqF8P4Agd2npQSXiuPNQX-cqeqVtJ2AQUOOa_2WX6-VDM8Ki6Pll/exec';
 export const CACHE_KEY = 'lms_remote_cache';
 export const SYNC_TIME_KEY = 'lms_last_sync';
 export const AUTH_KEY = 'lms_user_auth';

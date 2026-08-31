@@ -57,7 +57,7 @@ export const INITIAL_FORUM_THREADS = [
     authorName: 'Ahmad Santoso',
     authorRole: 'student',
     createdAt: Date.now() - 1 * 60 * 60 * 1000, // 1 hour ago
-    likes: ['USR-1', 'USR-2', 'USR-3', 'USR-4'],
+    likes: [],
     replies: [
       {
         replyId: 'rep-1',
@@ -79,7 +79,7 @@ export const INITIAL_FORUM_THREADS = [
     authorName: 'Rina Kusuma',
     authorRole: 'student',
     createdAt: Date.now() - 6 * 60 * 60 * 1000, // 6 hours ago (Terpopuler #1)
-    likes: ['USR-1', 'USR-2', 'USR-3', 'USR-4', 'USR-5', 'USR-6', 'USR-7', 'USR-8', 'USR-9', 'USR-10'],
+    likes: [],
     replies: [
       {
         replyId: 'rep-2',

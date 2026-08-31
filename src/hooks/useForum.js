@@ -120,40 +120,18 @@ export function useForum() {
         const remoteData = await response.json();
         if (Array.isArray(remoteData)) {
           const now = Date.now();
-          const valid = remoteData.filter(t => now - (Number(t.createdAt) || 0) < FORUM_TTL_MS);
-          const uidStr = String(activeUserId);
+          const valid = remoteData
+            .filter(t => now - (Number(t.createdAt) || 0) < FORUM_TTL_MS)
+            .map(t => ({
+              ...t,
+              likes: Array.isArray(t.likes) ? t.likes.map(String).filter(Boolean) : [],
+              replies: Array.isArray(t.replies) ? t.replies : []
+            }));
 
-          setRawThreads(prev => {
-            const prevMap = new Map();
-            prev.forEach(t => prevMap.set(t.threadId, t));
-
-            const merged = valid.map(remoteT => {
-              const localT = prevMap.get(remoteT.threadId);
-              if (!localT) return remoteT;
-
-              const localLikes = Array.isArray(localT.likes) ? localT.likes.map(String) : [];
-              const remoteLikes = Array.isArray(remoteT.likes) ? remoteT.likes.map(String) : [];
-              const localHasUser = localLikes.includes(uidStr);
-              const remoteHasUser = remoteLikes.includes(uidStr);
-
-              let finalLikes = remoteLikes;
-              if (localHasUser && !remoteHasUser) {
-                finalLikes = [...remoteLikes, uidStr];
-              } else if (!localHasUser && remoteHasUser) {
-                finalLikes = remoteLikes.filter(id => id !== uidStr);
-              }
-
-              return {
-                ...remoteT,
-                likes: finalLikes
-              };
-            });
-
-            try {
-              localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(merged));
-            } catch {}
-            return merged;
-          });
+          setRawThreads(valid);
+          try {
+            localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(valid));
+          } catch {}
         }
       }
     } catch (err) {
@@ -161,7 +139,7 @@ export function useForum() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [activeUserId]);
+  }, []);
 
   useEffect(() => {
     pruneExpiredThreads();
@@ -242,16 +220,17 @@ export function useForum() {
 
   const toggleLike = useCallback((threadId) => {
     if (!threadId) return;
-    const uidStr = String(activeUserId);
+    const uidStr = String(activeUserId || '').trim();
+    if (!uidStr) return;
 
     // 1. Instant optimistic update (0ms UI lag)
     setRawThreads(prev => {
       const next = prev.map(t => {
         if (t.threadId !== threadId) return t;
-        const currentLikes = Array.isArray(t.likes) ? t.likes.map(String) : [];
-        const isLiked = currentLikes.includes(uidStr);
+        const currentLikes = Array.isArray(t.likes) ? t.likes.map(String).filter(Boolean) : [];
+        const isLiked = currentLikes.some(id => id.toLowerCase() === uidStr.toLowerCase());
         const nextLikes = isLiked 
-          ? currentLikes.filter(id => id !== uidStr)
+          ? currentLikes.filter(id => id.toLowerCase() !== uidStr.toLowerCase())
           : [...currentLikes, uidStr];
         return { ...t, likes: nextLikes };
       });
