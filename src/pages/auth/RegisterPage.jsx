@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import registerHeroImg from '../../assets/auth/register.webp';
+import registerHeroImg from '../../assets/auth/register-1.webp';
 
 export function RegisterPage() {
   const { register, loading, error, setError } = useAuth();

@@ -7,14 +7,15 @@ import {
   FilePlus, 
   PanelLeftClose, 
   Compass, 
-  MessageSquare,
-  MessagesSquare,
-  LogOut,
-  Bell,
-  Users,
-  BarChart2
+  MessageSquare, 
+  MessagesSquare, 
+  LogOut, 
+  Bell, 
+  Users, 
+  BarChart2,
+  X
 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useAnnouncements } from '../hooks/useAnnouncements';
@@ -27,6 +28,7 @@ export function Sidebar() {
   const { unreadCount } = useAnnouncements();
   const { unreadChatCount } = useChat();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
@@ -35,6 +37,8 @@ export function Sidebar() {
       return false;
     }
   });
+
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const toggleCollapse = () => {
     setIsCollapsed((prev) => {
@@ -47,14 +51,33 @@ export function Sidebar() {
 
   useEffect(() => {
     const handleExternalToggle = () => {
-      toggleCollapse();
+      if (window.innerWidth < 1024) {
+        setIsMobileOpen((prev) => !prev);
+      } else {
+        toggleCollapse();
+      }
     };
 
+    const handleOpenMobile = () => setIsMobileOpen(true);
+    const handleCloseMobile = () => setIsMobileOpen(false);
+
     window.addEventListener('lms_toggle_sidebar', handleExternalToggle);
+    window.addEventListener('lms_toggle_mobile_sidebar', handleExternalToggle);
+    window.addEventListener('lms_open_mobile_sidebar', handleOpenMobile);
+    window.addEventListener('lms_close_mobile_sidebar', handleCloseMobile);
+
     return () => {
       window.removeEventListener('lms_toggle_sidebar', handleExternalToggle);
+      window.removeEventListener('lms_toggle_mobile_sidebar', handleExternalToggle);
+      window.removeEventListener('lms_open_mobile_sidebar', handleOpenMobile);
+      window.removeEventListener('lms_close_mobile_sidebar', handleCloseMobile);
     };
   }, []);
+
+  // Close mobile drawer on route navigation
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [location.pathname]);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -64,6 +87,7 @@ export function Sidebar() {
 
   const handleConfirmLogout = () => {
     setShowLogoutModal(false);
+    setIsMobileOpen(false);
     logout();
     navigate('/login');
   };
@@ -123,15 +147,20 @@ export function Sidebar() {
 
   const roleInfo = getRoleBadgeInfo();
 
-  const renderNavItem = (item) => {
+  const renderNavItem = (item, isMobile = false) => {
     const Icon = item.icon;
+    const collapsed = !isMobile && isCollapsed;
+
     return (
       <div key={item.to} className="relative group w-full flex justify-center">
         <NavLink
           to={item.to}
+          onClick={() => {
+            if (isMobile) setIsMobileOpen(false);
+          }}
           className={({ isActive }) =>
             `group/btn relative flex items-center rounded-xl text-xs font-semibold transition-all duration-200 overflow-hidden ${
-              isCollapsed 
+              collapsed 
                 ? 'w-10 h-10 justify-center p-0' 
                 : 'w-full px-3 py-2.5 justify-start'
             } ${
@@ -145,12 +174,12 @@ export function Sidebar() {
             <>
               <div className={`w-5 h-5 min-w-[20px] flex items-center justify-center shrink-0 relative ${isActive ? 'text-white' : 'text-slate-400 group-hover/btn:text-slate-700'}`}>
                 <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.2 : 1.8} />
-                {isCollapsed && item.badge && (
+                {collapsed && item.badge && (
                   <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-600 rounded-full border-2 border-white" />
                 )}
               </div>
               
-              {!isCollapsed && (
+              {!collapsed && (
                 <div className="flex items-center justify-between flex-1 ml-3 min-w-0">
                   <span className="whitespace-nowrap overflow-hidden truncate">
                     {item.label}
@@ -166,7 +195,7 @@ export function Sidebar() {
           )}
         </NavLink>
 
-        {isCollapsed && (
+        {collapsed && (
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center bg-slate-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg shadow-lg whitespace-nowrap z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
             <span>{item.label}</span>
             {item.badge && (
@@ -181,105 +210,182 @@ export function Sidebar() {
   };
 
   return (
-    <aside
-      className={`relative flex flex-col my-3.5 ml-3.5 h-[calc(100vh-1.75rem)] rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-xs transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-[width] z-40 select-none overflow-hidden shrink-0 ${
-        isCollapsed ? 'w-[70px]' : 'w-60'
-      }`}
-    >
-      <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3.5'} pt-4 pb-3.5 border-b border-slate-100 h-[68px] shrink-0 overflow-hidden`}>
-        <div className="flex items-center min-w-0 overflow-hidden">
-          <button
-            onClick={isCollapsed ? toggleCollapse : undefined}
-            className={`w-9 h-9 min-w-[36px] rounded-xl overflow-hidden flex items-center justify-center border border-slate-200/80 bg-white shrink-0 transition-transform ${
-              isCollapsed ? 'hover:scale-105 cursor-pointer' : ''
-            }`}
-            title={isCollapsed ? 'Buka Sidebar' : undefined}
-          >
-            <img 
-              src={logoImg} 
-              alt="HiPlaty Logo" 
-              className="w-full h-full object-cover rounded-xl"
-              loading="lazy"
-              width="36"
-              height="36"
-            />
-          </button>
-
-          {!isCollapsed && (
-            <div className="flex flex-col min-w-0 overflow-hidden ml-2.5">
-              <span className="font-bold text-slate-900 text-sm tracking-tight leading-tight truncate">
-                HiPlaty
-              </span>
-              <span className="text-[10px] font-medium text-slate-400 truncate tracking-wide">
-                {roleInfo.label}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {!isCollapsed && (
-          <button
-            onClick={toggleCollapse}
-            className="text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg p-1.5 transition-colors shrink-0 cursor-pointer"
-            title="Kecilkan Sidebar"
-            aria-label="Collapse sidebar"
-          >
-            <PanelLeftClose className="w-4 h-4" strokeWidth={2} />
-          </button>
-        )}
-      </div>
-
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 flex flex-col justify-start space-y-3.5">
-        {navSections.map((section, index) => (
-          <div key={section.id} className="w-full space-y-1 overflow-hidden">
-            {!isCollapsed ? (
-              <div className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase whitespace-nowrap overflow-hidden pt-1 pb-1">
-                {section.title}
-              </div>
-            ) : index > 0 ? (
-              <div className="h-px bg-slate-200/80 w-5 mx-auto my-1.5" />
-            ) : null}
-
-            <div className="space-y-1 overflow-hidden">
-              {section.items.map(renderNavItem)}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      <div className="p-2.5 border-t border-slate-100 space-y-1 shrink-0 overflow-hidden flex flex-col items-center">
-        {renderNavItem({ to: '/settings', icon: Settings, label: 'Pengaturan' })}
-
-        {auth && (
-          <div className="relative group w-full flex justify-center">
+    <>
+      {/* 1. DESKTOP FLOATING SIDEBAR (lg and up) */}
+      <aside
+        className={`hidden lg:flex relative flex-col my-3.5 ml-3.5 h-[calc(100vh-1.75rem)] rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-xs transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-[width] z-40 select-none overflow-hidden shrink-0 ${
+          isCollapsed ? 'w-[70px]' : 'w-60'
+        }`}
+      >
+        <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3.5'} pt-4 pb-3.5 border-b border-slate-100 h-[68px] shrink-0 overflow-hidden`}>
+          <div className="flex items-center min-w-0 overflow-hidden">
             <button
-              onClick={handleLogout}
-              className={`flex items-center rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50/80 transition-all overflow-hidden cursor-pointer ${
-                isCollapsed 
-                  ? 'w-10 h-10 justify-center p-0' 
-                  : 'w-full px-3 py-2.5 justify-start'
+              onClick={isCollapsed ? toggleCollapse : undefined}
+              className={`w-9 h-9 min-w-[36px] rounded-xl overflow-hidden flex items-center justify-center border border-slate-200/80 bg-white shrink-0 transition-transform ${
+                isCollapsed ? 'hover:scale-105 cursor-pointer' : ''
               }`}
-              title={isCollapsed ? 'Keluar Akun' : undefined}
+              title={isCollapsed ? 'Buka Sidebar' : undefined}
             >
-              <div className="w-5 h-5 min-w-[20px] flex items-center justify-center shrink-0">
-                <LogOut className="w-[18px] h-[18px] text-rose-500" strokeWidth={1.8} />
-              </div>
-              
-              {!isCollapsed && (
-                <span className="whitespace-nowrap overflow-hidden ml-3 truncate">
-                  Keluar Akun
-                </span>
-              )}
+              <img 
+                src={logoImg} 
+                alt="HiPlaty Logo" 
+                className="w-full h-full object-cover rounded-xl"
+                loading="lazy"
+                width="36"
+                height="36"
+              />
             </button>
 
-            {isCollapsed && (
-              <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center bg-slate-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg shadow-lg whitespace-nowrap z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
-                <span>Keluar Akun</span>
+            {!isCollapsed && (
+              <div className="flex flex-col min-w-0 overflow-hidden ml-2.5">
+                <span className="font-bold text-slate-900 text-sm tracking-tight leading-tight truncate">
+                  HiPlaty
+                </span>
+                <span className="text-[10px] font-medium text-slate-400 truncate tracking-wide">
+                  {roleInfo.label}
+                </span>
               </div>
             )}
           </div>
-        )}
-      </div>
+
+          {!isCollapsed && (
+            <button
+              onClick={toggleCollapse}
+              className="text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg p-1.5 transition-colors shrink-0 cursor-pointer"
+              title="Kecilkan Sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose className="w-4 h-4" strokeWidth={2} />
+            </button>
+          )}
+        </div>
+
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 flex flex-col justify-start space-y-3.5">
+          {navSections.map((section, index) => (
+            <div key={section.id} className="w-full space-y-1 overflow-hidden">
+              {!isCollapsed ? (
+                <div className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase whitespace-nowrap overflow-hidden pt-1 pb-1">
+                  {section.title}
+                </div>
+              ) : index > 0 ? (
+                <div className="h-px bg-slate-200/80 w-5 mx-auto my-1.5" />
+              ) : null}
+
+              <div className="space-y-1 overflow-hidden">
+                {section.items.map(item => renderNavItem(item, false))}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        <div className="p-2.5 border-t border-slate-100 space-y-1 shrink-0 overflow-hidden flex flex-col items-center">
+          {renderNavItem({ to: '/settings', icon: Settings, label: 'Pengaturan' }, false)}
+
+          {auth && (
+            <div className="relative group w-full flex justify-center">
+              <button
+                onClick={handleLogout}
+                className={`flex items-center rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50/80 transition-all overflow-hidden cursor-pointer ${
+                  isCollapsed 
+                    ? 'w-10 h-10 justify-center p-0' 
+                    : 'w-full px-3 py-2.5 justify-start'
+                }`}
+                title={isCollapsed ? 'Keluar Akun' : undefined}
+              >
+                <div className="w-5 h-5 min-w-[20px] flex items-center justify-center shrink-0">
+                  <LogOut className="w-[18px] h-[18px] text-rose-500" strokeWidth={1.8} />
+                </div>
+                
+                {!isCollapsed && (
+                  <span className="whitespace-nowrap overflow-hidden ml-3 truncate">
+                    Keluar Akun
+                  </span>
+                )}
+              </button>
+
+              {isCollapsed && (
+                <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center bg-slate-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg shadow-lg whitespace-nowrap z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+                  <span>Keluar Akun</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* 2. MOBILE & TABLET OFF-CANVAS DRAWER (< 1024px) */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop Blur Overlay */}
+          <div
+            onClick={() => setIsMobileOpen(false)}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+          />
+
+          {/* Drawer Body */}
+          <aside className="relative flex flex-col w-72 max-w-[85vw] h-full bg-white shadow-2xl z-10 border-r border-slate-200 animate-in slide-in-from-left duration-250 select-none">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-slate-100 h-16 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 bg-white">
+                  <img 
+                    src={logoImg} 
+                    alt="HiPlaty Logo" 
+                    className="w-full h-full object-cover rounded-xl"
+                    width="36"
+                    height="36"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-slate-900 text-sm tracking-tight leading-tight">
+                    HiPlaty
+                  </span>
+                  <span className="text-[10px] font-medium text-slate-400">
+                    {roleInfo.label}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsMobileOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                aria-label="Tutup menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+              {navSections.map((section) => (
+                <div key={section.id} className="space-y-1">
+                  <div className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase pt-1 pb-1">
+                    {section.title}
+                  </div>
+                  <div className="space-y-1">
+                    {section.items.map(item => renderNavItem(item, true))}
+                  </div>
+                </div>
+              ))}
+            </nav>
+
+            <div className="p-3 border-t border-slate-100 space-y-1 shrink-0">
+              {renderNavItem({ to: '/settings', icon: Settings, label: 'Pengaturan' }, true)}
+
+              {auth && (
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50/80 transition-all cursor-pointer"
+                >
+                  <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                    <LogOut className="w-[18px] h-[18px] text-rose-500" strokeWidth={1.8} />
+                  </div>
+                  <span className="ml-3 truncate">Keluar Akun</span>
+                </button>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
       <ConfirmModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
@@ -290,6 +396,6 @@ export function Sidebar() {
         cancelText="Batal"
         type="logout"
       />
-    </aside>
+    </>
   );
 }

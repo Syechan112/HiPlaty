@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft, History, X } from 'lucide-react';
-import loginHeroImg from '../../assets/auth/login.webp';
+import loginHeroImg from '../../assets/auth/login-1.webp';
 
 export function LoginPage() {
   const { login, loading, error, setError } = useAuth();

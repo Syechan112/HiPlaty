@@ -11,7 +11,8 @@ import {
   Check, 
   ChevronUp, 
   ChevronDown,
-  PanelLeftOpen
+  PanelLeftOpen,
+  ArrowLeft
 } from 'lucide-react';
 import { getGroupColor } from '../../../utils/studyGroupHelpers';
 
@@ -27,7 +28,8 @@ export function StudyGroupHeader({
   copiedGroupId,
   setCopiedGroupId,
   isGroupSidebarOpen = true,
-  setIsGroupSidebarOpen
+  setIsGroupSidebarOpen,
+  onBack
 }) {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
 
@@ -46,13 +48,24 @@ export function StudyGroupHeader({
   // Compact Minimal Header Mode
   if (isHeaderCollapsed) {
     return (
-      <div className="px-4 py-2 border-b border-slate-200/80 bg-white flex items-center justify-between gap-3 shrink-0 shadow-2xs transition-all animate-in fade-in duration-150">
-        <div className="flex items-center gap-2.5 truncate">
+      <div className="px-3 sm:px-4 py-2 border-b border-slate-200/80 bg-white flex items-center justify-between gap-2 sm:gap-3 shrink-0 shadow-2xs transition-all animate-in fade-in duration-150">
+        <div className="flex items-center gap-2 sm:gap-2.5 truncate">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="p-1.5 -ml-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer md:hidden"
+              title="Kembali ke Daftar Grup"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          )}
+
           {!isGroupSidebarOpen && setIsGroupSidebarOpen && (
             <button
               type="button"
               onClick={() => setIsGroupSidebarOpen(true)}
-              className="p-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer mr-1"
+              className="p-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer mr-1 hidden md:block"
               title="Buka Daftar Grup"
             >
               <PanelLeftOpen className="w-4 h-4" />
@@ -116,14 +129,25 @@ export function StudyGroupHeader({
 
   // Expanded Full Header Mode
   return (
-    <div className="p-4 sm:p-5 border-b border-slate-100 bg-white space-y-4 shrink-0 transition-all animate-in fade-in duration-150">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 truncate">
+    <div className="p-3.5 sm:p-5 border-b border-slate-100 bg-white space-y-3 sm:space-y-4 shrink-0 transition-all animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-2.5 sm:gap-3 truncate">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="p-1.5 -ml-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer md:hidden"
+              title="Kembali ke Daftar Grup"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+
           {!isGroupSidebarOpen && setIsGroupSidebarOpen && (
             <button
               type="button"
               onClick={() => setIsGroupSidebarOpen(true)}
-              className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer mr-0.5"
+              className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer mr-0.5 hidden md:block"
               title="Buka Daftar Grup"
             >
               <PanelLeftOpen className="w-4.5 h-4.5" />
@@ -131,7 +155,7 @@ export function StudyGroupHeader({
           )}
 
           <div
-            className="w-11 h-11 rounded-2xl text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs"
+            className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl text-white flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-xs"
             style={{ backgroundColor: colorTheme.hex }}
           >
             {(activeGroup.name || 'G').charAt(0).toUpperCase()}

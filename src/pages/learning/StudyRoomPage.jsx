@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Sidebar } from '../../components/Sidebar';
 import { TopNav } from '../../components/TopNav';
 import { MaterialNotesPanel } from '../../components/learning/MaterialNotesPanel';
@@ -61,9 +62,16 @@ export function StudyRoomPage() {
     nextContent
   } = useStudyRoom();
 
+  const [isSyllabusDrawerOpen, setIsSyllabusDrawerOpen] = useState(false);
+
   const isCompleted = currentBatch && currentContent 
     ? isContentComplete(currentBatch.batchName, currentContent.contentId) 
     : false;
+
+  const onSelectContentResponsive = (batchId, moduleId, contentId) => {
+    handleSelectContent(batchId, moduleId, contentId);
+    setIsSyllabusDrawerOpen(false);
+  };
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans antialiased overflow-hidden selection:bg-slate-900 selection:text-white text-slate-900">
@@ -99,63 +107,116 @@ export function StudyRoomPage() {
             </div>
           </main>
         ) : (
-          <div className="flex-1 flex overflow-hidden">
-            {/* 1. Kurikulum Sidebar dengan Batch Switcher Toggle */}
-            <StudyRoomSidebar
-              mySavedBatches={mySavedBatches}
-              currentBatch={currentBatch}
-              selectedBatchId={selectedBatchId}
-              handleSwitchBatch={handleSwitchBatch}
-              selectedModuleId={selectedModuleId}
-              selectedContentId={selectedContentId}
-              expandedModules={expandedModules}
-              toggleModule={toggleModule}
-              handleSelectContent={handleSelectContent}
-              isContentComplete={isContentComplete}
-              hasNote={hasNote}
-              isSidebarCompact={isSidebarCompact}
-              setIsSidebarCompact={setIsSidebarCompact}
-              calculateBatchProgress={calculateBatchProgress}
-            />
+          <div className="flex-1 flex overflow-hidden relative">
+            {/* 1. Kurikulum Sidebar Desktop */}
+            <div className="hidden lg:flex shrink-0">
+              <StudyRoomSidebar
+                mySavedBatches={mySavedBatches}
+                currentBatch={currentBatch}
+                selectedBatchId={selectedBatchId}
+                handleSwitchBatch={handleSwitchBatch}
+                selectedModuleId={selectedModuleId}
+                selectedContentId={selectedContentId}
+                expandedModules={expandedModules}
+                toggleModule={toggleModule}
+                handleSelectContent={handleSelectContent}
+                isContentComplete={isContentComplete}
+                hasNote={hasNote}
+                isSidebarCompact={isSidebarCompact}
+                setIsSidebarCompact={setIsSidebarCompact}
+                calculateBatchProgress={calculateBatchProgress}
+              />
+            </div>
+
+            {/* Kurikulum Sidebar Drawer Mobile & Tablet (< 1024px) */}
+            {isSyllabusDrawerOpen && (
+              <div className="fixed inset-0 z-50 lg:hidden flex">
+                <div
+                  onClick={() => setIsSyllabusDrawerOpen(false)}
+                  className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+                />
+                <div className="relative z-10 w-80 max-w-[85vw] h-full bg-white shadow-2xl animate-in slide-in-from-left duration-250 flex flex-col">
+                  <StudyRoomSidebar
+                    mySavedBatches={mySavedBatches}
+                    currentBatch={currentBatch}
+                    selectedBatchId={selectedBatchId}
+                    handleSwitchBatch={handleSwitchBatch}
+                    selectedModuleId={selectedModuleId}
+                    selectedContentId={selectedContentId}
+                    expandedModules={expandedModules}
+                    toggleModule={toggleModule}
+                    handleSelectContent={onSelectContentResponsive}
+                    isContentComplete={isContentComplete}
+                    hasNote={hasNote}
+                    isSidebarCompact={false}
+                    setIsSidebarCompact={() => setIsSyllabusDrawerOpen(false)}
+                    calculateBatchProgress={calculateBatchProgress}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* 2. Main Article Content Area */}
-            <main className="flex-1 overflow-y-auto flex flex-col">
-                <StudyRoomContentHeader
+            <main className="flex-1 overflow-y-auto flex flex-col min-w-0">
+              <StudyRoomContentHeader
+                currentBatch={currentBatch}
+                currentModule={currentModule}
+                currentContent={currentContent}
+                isNotesOpen={isNotesOpen}
+                setIsNotesOpen={setIsNotesOpen}
+                setShowFriendModal={setShowFriendModal}
+                setStudyGroupModalBatch={setStudyGroupModalBatch}
+                setIsSelectingBatch={setIsSelectingBatch}
+                handleMarkComplete={handleMarkComplete}
+                isCompleted={isCompleted}
+                onToggleSyllabus={() => setIsSyllabusDrawerOpen(prev => !prev)}
+                isSyllabusOpen={isSyllabusDrawerOpen}
+              />
+
+              <div className="p-3 sm:p-6 lg:p-8 flex-1">
+                <StudyRoomArticleView
                   currentBatch={currentBatch}
-                  currentModule={currentModule}
                   currentContent={currentContent}
-                  isNotesOpen={isNotesOpen}
-                  setIsNotesOpen={setIsNotesOpen}
-                  setShowFriendModal={setShowFriendModal}
-                  setStudyGroupModalBatch={setStudyGroupModalBatch}
-                  setIsSelectingBatch={setIsSelectingBatch}
+                  prevContent={prevContent}
+                  nextContent={nextContent}
+                  handleSelectContent={handleSelectContent}
                   handleMarkComplete={handleMarkComplete}
                   isCompleted={isCompleted}
                 />
+              </div>
+            </main>
 
-                <div className="p-4 sm:p-6 lg:p-8 flex-1">
-                  <StudyRoomArticleView
-                    currentBatch={currentBatch}
-                    currentContent={currentContent}
-                    prevContent={prevContent}
-                    nextContent={nextContent}
-                    handleSelectContent={handleSelectContent}
-                    handleMarkComplete={handleMarkComplete}
-                    isCompleted={isCompleted}
+            {/* 3. Sliding Notes Panel (Desktop Inline, Mobile/Tablet Drawer) */}
+            {isNotesOpen && currentContent && (
+              <>
+                {/* Desktop view */}
+                <div className="hidden lg:flex shrink-0 p-3.5 pl-0">
+                  <MaterialNotesPanel
+                    contentId={currentContent.contentId}
+                    contentTitle={currentContent.title}
+                    isOpen={isNotesOpen}
+                    onClose={() => setIsNotesOpen(false)}
                   />
                 </div>
-              </main>
 
-              {/* 3. Sliding Notes Panel */}
-              {isNotesOpen && currentContent && (
-                <MaterialNotesPanel
-                  contentId={currentContent.contentId}
-                  contentTitle={currentContent.title}
-                  isOpen={isNotesOpen}
-                  onClose={() => setIsNotesOpen(false)}
-                />
-              )}
-            </div>
+                {/* Mobile / Tablet Drawer */}
+                <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+                  <div
+                    onClick={() => setIsNotesOpen(false)}
+                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+                  />
+                  <div className="relative z-10 w-full sm:w-96 max-w-[90vw] h-full bg-white shadow-2xl animate-in slide-in-from-right duration-250 flex flex-col">
+                    <MaterialNotesPanel
+                      contentId={currentContent.contentId}
+                      contentTitle={currentContent.title}
+                      isOpen={isNotesOpen}
+                      onClose={() => setIsNotesOpen(false)}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         )}
       </div>
 

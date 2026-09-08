@@ -4,6 +4,7 @@ import {
   Search, 
   RefreshCw, 
   PanelLeftClose, 
+  Menu,
   Home, 
   Compass, 
   BookOpen, 
@@ -301,27 +302,28 @@ export function TopNav({ userName, onSync }) {
   };
 
   return (
-    <header className="relative rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-xs mt-3.5 mr-3.5 ml-2 px-4 py-2.5 flex items-center justify-between z-30 select-none gap-3">
-      <div className="flex items-center gap-3">
+    <header className="relative rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-xs mt-2 sm:mt-3.5 mr-2 sm:mr-3.5 ml-2 px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between z-30 select-none gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3">
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('lms_toggle_sidebar'))}
-          className="p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
-          title="Buka / Kecilkan Sidebar"
+          className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+          title="Menu / Sidebar"
           aria-label="Toggle sidebar"
         >
-          <PanelLeftClose className="w-4 h-4" strokeWidth={2} />
+          <Menu className="w-5 h-5 lg:hidden" strokeWidth={2} />
+          <PanelLeftClose className="w-4 h-4 hidden lg:block" strokeWidth={2} />
         </button>
 
-        <div className="h-5 w-px bg-slate-200" />
+        <div className="h-5 w-px bg-slate-200 hidden sm:block" />
 
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
             {displayName?.[0]?.toUpperCase() || 'G'}
           </div>
 
           <div className="text-left hidden sm:block">
-            <p className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[140px]">
+            <p className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[120px] md:max-w-[150px]">
               {displayName}
             </p>
             <span className={`inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded border ${roleBadge.className}`}>
@@ -337,7 +339,7 @@ export function TopNav({ userName, onSync }) {
               setIsNotifOpen(!isNotifOpen);
               setPreviewAnn(null);
             }}
-            className={`relative w-8 h-8 flex items-center justify-center rounded-xl transition-colors cursor-pointer ml-0.5 ${
+            className={`relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-xl transition-colors cursor-pointer ml-0.5 ${
               isNotifOpen 
                 ? 'bg-slate-900 text-white' 
                 : 'bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900'
@@ -352,7 +354,7 @@ export function TopNav({ userName, onSync }) {
           </button>
 
           {isNotifOpen && (
-            <div className="absolute left-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95">
+            <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-2 w-auto sm:w-96 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95">
               
               <div className="p-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
@@ -727,7 +729,7 @@ export function TopNav({ userName, onSync }) {
         </div>
 
         {isSearchOpen && (
-          <div className="absolute right-0 mt-2 w-full sm:w-[420px] bg-white rounded-2xl border border-slate-200/90 shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95">
+          <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-[420px] max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl border border-slate-200/90 shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95">
             <div className="p-2.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Pencarian LMS

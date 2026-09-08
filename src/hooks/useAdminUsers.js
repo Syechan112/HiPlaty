@@ -11,6 +11,7 @@ export function useAdminUsers() {
   const [successMessage, setSuccessMessage] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -62,16 +63,34 @@ export function useAdminUsers() {
     }
   }, [isAdmin]);
 
+  const roleCounts = useMemo(() => {
+    return {
+      all: users.length,
+      student: users.filter(u => (u.role || '').toLowerCase() === 'student').length,
+      educator: users.filter(u => (u.role || '').toLowerCase() === 'educator').length,
+      admin: users.filter(u => (u.role || '').toLowerCase() === 'admin').length
+    };
+  }, [users]);
+
   const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users;
-    const q = searchQuery.toLowerCase();
-    return users.filter(u => 
-      (u.name && u.name.toLowerCase().includes(q)) ||
-      (u.email && u.email.toLowerCase().includes(q)) ||
-      (u.userId && u.userId.toLowerCase().includes(q)) ||
-      (u.role && u.role.toLowerCase().includes(q))
-    );
-  }, [users, searchQuery]);
+    let result = users;
+
+    if (roleFilter !== 'all') {
+      result = result.filter(u => (u.role || '').toLowerCase() === roleFilter.toLowerCase());
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(u => 
+        (u.name && u.name.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.userId && u.userId.toLowerCase().includes(q)) ||
+        (u.role && u.role.toLowerCase().includes(q))
+      );
+    }
+
+    return result;
+  }, [users, searchQuery, roleFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
 
@@ -88,6 +107,11 @@ export function useAdminUsers() {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleRoleFilterChange = (role) => {
+    setRoleFilter(role);
     setCurrentPage(1);
   };
 
@@ -212,7 +236,12 @@ export function useAdminUsers() {
     error,
     successMessage,
     searchQuery,
+    setSearchQuery,
     handleSearchChange,
+    roleFilter,
+    setRoleFilter,
+    handleRoleFilterChange,
+    roleCounts,
     currentPage,
     setCurrentPage,
     totalPages,

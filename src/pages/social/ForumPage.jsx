@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { TopNav } from '../../components/TopNav';
 import { Sidebar } from '../../components/Sidebar';
 import { ForumHeader } from '../../components/forum/ForumHeader';
@@ -8,7 +8,7 @@ import { ForumCreateModal } from '../../components/forum/ForumCreateModal';
 import { ForumThreadDetailModal } from '../../components/forum/ForumThreadDetailModal';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { useForum } from '../../hooks/useForum';
-import { MessagesSquare, Plus, Sparkles } from 'lucide-react';
+import { MessagesSquare, Plus } from 'lucide-react';
 
 export function ForumPage() {
   const {

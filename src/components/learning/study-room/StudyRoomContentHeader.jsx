@@ -17,7 +17,9 @@ export function StudyRoomContentHeader({
   setStudyGroupModalBatch,
   setIsSelectingBatch,
   handleMarkComplete,
-  isCompleted
+  isCompleted,
+  onToggleSyllabus,
+  isSyllabusOpen
 }) {
   if (!currentBatch || !currentContent) return null;
 
@@ -81,7 +83,36 @@ export function StudyRoomContentHeader({
         </div>
 
         {/* Actions */}
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0">
+
+          {/* Syllabus Drawer Toggle (Mobile & Tablet) */}
+          {onToggleSyllabus && (
+            <button
+              type="button"
+              onClick={onToggleSyllabus}
+              className={`
+                flex h-9 items-center gap-1.5
+                rounded-lg
+                border
+                px-2.5 sm:px-3
+                text-[11px]
+                font-bold
+                transition-all duration-150
+                cursor-pointer
+                lg:hidden
+                ${
+                  isSyllabusOpen
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                }
+              `}
+              title="Lihat Silabus Kurikulum"
+              aria-label="Lihat Silabus Kurikulum"
+            >
+              <Layers className="h-3.5 w-3.5" strokeWidth={2} />
+              <span>Silabus</span>
+            </button>
+          )}
 
           {/* Add Friend */}
           <button

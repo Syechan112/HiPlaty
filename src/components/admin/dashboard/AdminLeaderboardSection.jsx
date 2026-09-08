@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Flame, Clock, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AdminLeaderboardMobile } from './AdminLeaderboardMobile';
 
 function formatDuration(totalSecs = 0) {
   const secs = parseInt(totalSecs, 10) || 0;
@@ -35,14 +36,26 @@ export function AdminLeaderboardSection({
   const paginatedLeaderboard = filteredLeaderboard.slice(startIndex, endIndex);
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-      {/* Header Controls */}
-      <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="font-extrabold text-slate-900 text-sm sm:text-base flex items-center gap-2 tracking-tight">
-            <Trophy className="w-4 h-4 text-amber-500" />
-            <span>Peringkat & Keaktifan Belajar Siswa</span>
-          </h2>
+    <>
+      {/* Mobile Optimized Leaderboard (< 640px) */}
+      <AdminLeaderboardMobile
+        filteredLeaderboard={filteredLeaderboard}
+        leaderboardSort={leaderboardSort}
+        setLeaderboardSort={setLeaderboardSort}
+        leaderboardSearch={leaderboardSearch}
+        setLeaderboardSearch={setLeaderboardSearch}
+        fetchingUsers={fetchingUsers}
+      />
+
+      {/* Desktop & Tablet Table (>= 640px) */}
+      <div className="hidden sm:block bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        {/* Header Controls */}
+        <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="font-extrabold text-slate-900 text-sm sm:text-base flex items-center gap-2 tracking-tight">
+              <Trophy className="w-4 h-4 text-amber-500" />
+              <span>Peringkat & Keaktifan Belajar Siswa</span>
+            </h2>
           <p className="text-xs text-slate-400 font-medium mt-0.5">
             Daftar siswa dengan durasi belajar tertinggi dan streak konsistensi harian.
           </p>
@@ -200,6 +213,7 @@ export function AdminLeaderboardSection({
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

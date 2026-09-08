@@ -16,7 +16,12 @@ export function AdminUserManagement() {
     error,
     successMessage,
     searchQuery,
+    setSearchQuery,
     handleSearchChange,
+    roleFilter,
+    setRoleFilter,
+    handleRoleFilterChange,
+    roleCounts,
     currentPage,
     setCurrentPage,
     totalPages,
@@ -89,7 +94,12 @@ export function AdminUserManagement() {
               filteredUsers={filteredUsers}
               paginatedUsers={paginatedUsers}
               searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
               handleSearchChange={handleSearchChange}
+              roleFilter={roleFilter}
+              setRoleFilter={setRoleFilter}
+              handleRoleFilterChange={handleRoleFilterChange}
+              roleCounts={roleCounts}
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
               totalPages={totalPages}

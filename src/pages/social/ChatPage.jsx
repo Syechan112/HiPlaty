@@ -173,37 +173,42 @@ export function ChatPage() {
         <TopNav />
         <div className="flex-1 flex overflow-hidden">
           
-          {/* Sidebar Daftar Teman */}
-          <ChatFriendsSidebar
-            currentUserId={currentUserId}
-            copiedMyId={copiedMyId}
-            handleCopyMyId={handleCopyMyId}
-            setShowAddModal={setShowAddModal}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            filteredFriends={filteredFriends}
-            activeFriend={activeFriend}
-            handleSelectFriend={handleSelectFriend}
-          />
+          {/* Sidebar Daftar Teman (Full width on mobile when no active friend, or visible on desktop) */}
+          <div className={`${activeFriend ? 'hidden md:flex' : 'flex w-full'} md:w-80 md:shrink-0 flex-col`}>
+            <ChatFriendsSidebar
+              currentUserId={currentUserId}
+              copiedMyId={copiedMyId}
+              handleCopyMyId={handleCopyMyId}
+              setShowAddModal={setShowAddModal}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              filteredFriends={filteredFriends}
+              activeFriend={activeFriend}
+              handleSelectFriend={handleSelectFriend}
+            />
+          </div>
 
-          {/* Obrolan Aktif */}
-          <ChatActiveConversation
-            activeFriend={activeFriend}
-            currentUserId={currentUserId}
-            messages={messages}
-            messagesEndRef={messagesEndRef}
-            messageInputRef={messageInputRef}
-            inputMessage={inputMessage}
-            setInputMessage={setInputMessage}
-            handleSendMessage={handleSendMessage}
-            editingMessage={editingMessage}
-            setEditingMessage={setEditingMessage}
-            handleStartEdit={handleStartEdit}
-            deleteMessage={deleteMessage}
-            setShowUnfriendModal={setShowUnfriendModal}
-            copiedFriendId={copiedFriendId}
-            handleCopyFriendId={handleCopyFriendId}
-          />
+          {/* Obrolan Aktif (Full width on mobile when friend selected, or visible on desktop) */}
+          <div className={`${activeFriend ? 'flex w-full' : 'hidden md:flex'} flex-1 flex-col min-w-0`}>
+            <ChatActiveConversation
+              activeFriend={activeFriend}
+              currentUserId={currentUserId}
+              messages={messages}
+              messagesEndRef={messagesEndRef}
+              messageInputRef={messageInputRef}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              handleSendMessage={handleSendMessage}
+              editingMessage={editingMessage}
+              setEditingMessage={setEditingMessage}
+              handleStartEdit={handleStartEdit}
+              deleteMessage={deleteMessage}
+              setShowUnfriendModal={setShowUnfriendModal}
+              copiedFriendId={copiedFriendId}
+              handleCopyFriendId={handleCopyFriendId}
+              onBack={() => setActiveFriend(null)}
+            />
+          </div>
 
         </div>
       </div>

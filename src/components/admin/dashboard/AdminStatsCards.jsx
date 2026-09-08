@@ -1,5 +1,6 @@
 import { Users, Layers, FileText, Bell, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { AdminStatsBentoMobile } from './AdminStatsBentoMobile';
 
 export function AdminStatsCards({
   totalUsers = 0,
@@ -55,7 +56,21 @@ export function AdminStatsCards({
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+    <>
+      {/* Mobile Bento Grid (< 640px) */}
+      <AdminStatsBentoMobile
+        totalUsers={totalUsers}
+        totalStudents={totalStudents}
+        totalEducators={totalEducators}
+        totalAdmins={totalAdmins}
+        totalBatches={totalBatches}
+        totalModules={totalModules}
+        totalContents={totalContents}
+        allAnnouncements={allAnnouncements}
+      />
+
+      {/* Desktop & Tablet Grid (>= 640px) */}
+      <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
       {cards.map((item) => {
         const Icon = item.icon;
         const CardContent = (
@@ -90,6 +105,7 @@ export function AdminStatsCards({
 
         return <div key={item.id}>{CardContent}</div>;
       })}
-    </div>
+      </div>
+    </>
   );
 }

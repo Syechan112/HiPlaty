@@ -99,23 +99,25 @@ export function StudyGroupPage() {
 
         <div className="flex-1 flex overflow-hidden">
           
-          {/* Sidebar Daftar Grup */}
-          <StudyGroupSidebar
-            groups={groups}
-            filteredGroups={filteredGroups}
-            activeGroupId={activeGroupId}
-            setActiveGroupId={setActiveGroupId}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            setShowCreateModal={setShowCreateModal}
-            setShowJoinModal={setShowJoinModal}
-            isOpen={isGroupSidebarOpen}
-            onClose={() => setIsGroupSidebarOpen(false)}
-          />
+          {/* Sidebar Daftar Grup (Full width on mobile when no active group, or visible on desktop) */}
+          <div className={`${activeGroup ? 'hidden md:flex' : 'flex w-full'} md:w-80 md:shrink-0 flex-col`}>
+            <StudyGroupSidebar
+              groups={groups}
+              filteredGroups={filteredGroups}
+              activeGroupId={activeGroupId}
+              setActiveGroupId={setActiveGroupId}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              setShowCreateModal={setShowCreateModal}
+              setShowJoinModal={setShowJoinModal}
+              isOpen={isGroupSidebarOpen}
+              onClose={() => setIsGroupSidebarOpen(false)}
+            />
+          </div>
 
-          {/* Area Aktif Grup */}
+          {/* Area Aktif Grup (Full width on mobile when group selected, or visible on desktop) */}
           {!activeGroup ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400 space-y-3 bg-slate-50/50">
+            <div className="hidden md:flex flex-1 flex-col items-center justify-center p-8 text-center text-slate-400 space-y-3 bg-slate-50/50">
               <div className="w-14 h-14 rounded-3xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-2xs">
                 <Users className="w-7 h-7" />
               </div>
@@ -135,7 +137,7 @@ export function StudyGroupPage() {
               </button>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-white">
+            <div className={`${activeGroup ? 'flex w-full' : 'hidden md:flex'} flex-1 flex-col min-w-0 h-full overflow-hidden bg-white`}>
               
               {/* Header Grup */}
               <StudyGroupHeader
@@ -151,6 +153,7 @@ export function StudyGroupPage() {
                 setCopiedGroupId={groupPage.setCopiedGroupId}
                 isGroupSidebarOpen={isGroupSidebarOpen}
                 setIsGroupSidebarOpen={setIsGroupSidebarOpen}
+                onBack={() => setActiveGroupId(null)}
               />
 
               {/* Konten Tab: Materi atau Forum Diskusi */}
